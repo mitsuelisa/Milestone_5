@@ -1,0 +1,71 @@
+---
+title: "Water Stress in Mexico City"
+author: "Mitsue Guerrero"
+date: "10/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(janitor)
+library(httr)
+library(pageviews)
+library(jsonlite)
+library(gt)
+library(sf)
+```
+
+# About:
+
+## Why Mexico?  
+
+Mexico City is drawing groundwater at an unsustainable rate and is expected to reach day zero (run out off water) by 2050.  
+
+Consuming water at a higher rate than it's able to recover is called water stress.  
+
+With over 20 million citizens and hosting the federal government, water scarcity will pose a national emergency.  
+
+Mexico City has been focusing efforts in developing resilience strategies to fight water scarcity. One of them has been around rainwater harvesting in communities that are already facing water scarcity.  
+
+## Where is this data from?  
+
+This data is from the water utility in Mexico City (SACMEX) to compare water consumption per neighborhoods (colonias).   
+This data set was combined with data collected by the Natural Environment Secretary (SEDEMA) which shows points for high precipitation levels and flooding risks.  
+
+## The data explained:
+
+*The district name is the name of the neighborhoods in Mexico City.  
+*Each district belong to a municipality.  
+*Both each district and each municipality have spatial coordinates linked to them.  
+*Precipitation level can be high, medium or low, based on the amount of water collected from rainfall throughout the year.  
+*Flooding risk is also measured in high, medium or low, based on the precipitation level, capacity of draining infrastructure and flood cases observed.  
+
+# Source:
+[Datos Abiertos Ciudad de Mexico](https://datos.cdmx.gob.mx/explore/dataset/consumo-agua/information/?location=10,19.35762,-99.14463&dataChart=eyJxdWVyaWVzIjpbeyJjaGFydHMiOlt7InR5cGUiOiJiYXIiLCJmdW5jIjoiQ09VTlQiLCJ5QXhpcyI6ImNvbnN1bW8iLCJzY2llbnRpZmljRGlzcGxheSI6dHJ1ZSwiY29sb3IiOiJyYW5nZS1CbHVlcyJ9XSwieEF4aXMiOiJhbGNhbGRpYSIsIm1heHBvaW50cyI6NTAsInNvcnQiOiIiLCJzZXJpZXNCcmVha2Rvd24iOiJpbmRpY2VfZGVzYXJyb2xsbyIsInN0YWNrZWQiOiJub3JtYWwiLCJjb25maWciOnsiZGF0YXNldCI6ImNvbnN1bW8tYWd1YSIsIm9wdGlvbnMiOnt9fX1dLCJ0aW1lc2NhbGUiOiIiLCJkaXNwbGF5TGVnZW5kIjp0cnVlLCJhbGlnbk1vbnRoIjp0cnVlfQ%3D%3D)
+
+
+
+```{r Data Source 1 and 2 from CSV, message = FALSE}
+
+data1_csv <- read_delim("raw-data/consumo-agua.csv", ";", locale = readr::locale(encoding = "UTF-8")) %>%
+  clean_names()
+
+consumo <- data1_csv %>% 
+  select(consumo_total, nomgeo, indice_des) %>%
+  group_by(nomgeo) %>% 
+  summarise(consumo_avg = mean(consumo_total)) %>%
+  arrange(desc(consumo_avg))
+
+consumo$nomgeo <- factor(consumo$nomgeo, levels =consumo$nomgeo[order(consumo$consumo_avg)])
+
+# ggplot(consumo, aes(x = nomgeo, y = consumo_avg, fill = nomgeo, alpha = 0.5)) +
+#   theme_minimal() +
+#   geom_col() +
+#   coord_flip() +
+#   theme(legend.position = "none", panel.grid.major.y =  element_blank()) +
+#   ggtitle("Average water consumption by Municipality in Mexico City") +
+#   xlab("Municipality") + ylab ("Liters")
+
+```
+
